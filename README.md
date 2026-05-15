@@ -65,4 +65,5 @@ Dự án này chỉ đẩy lên GitHub các mã nguồn tùy chỉnh (Custom Cod
 
 Dự án được thiết kế và lập trình bởi:
 - **Lâm Chí Thành**
+- **Đặng Hoàng Tùng**
 - Đề tài: Thương mại điện tử / Hệ thống thông tin (Xây dựng Website PC Store).
