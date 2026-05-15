@@ -1,11 +1,11 @@
-# 🛒 Chí Thành PC Store (BCCĐ Project)
+# 🛒 TTShopGear (BCCĐ Project)
 
 ![Project Status](https://img.shields.io/badge/Status-Completed-success)
 ![WordPress](https://img.shields.io/badge/WordPress-6.x-blue)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.x-purple)
 ![PHP](https://img.shields.io/badge/PHP-7.4+-777bb3)
 
-**ChiThanhh PC Store** là một website Thương mại điện tử chuyên bán linh kiện máy tính và Gaming Gear, được xây dựng trên nền tảng WordPress & WooCommerce. Đây là dự án phục vụ cho Báo Cáo Chuyên Đề (BCCĐ).
+**TTShopGear** là một website Thương mại điện tử chuyên bán linh kiện máy tính và Gaming Gear, được xây dựng trên nền tảng WordPress & WooCommerce. Đây là dự án phục vụ cho Báo Cáo Chuyên Đề (BCCĐ).
 
 Điểm nổi bật của dự án là một **Plugin Tự Build PC (PC Builder)** do sinh viên tự phát triển, cho phép người dùng tự do lựa chọn linh kiện, kiểm tra độ tương thích giữa các linh kiện (Ví dụ: CPU và Mainboard) và tự động thêm toàn bộ cấu hình vào giỏ hàng chỉ với một thao tác.
 
@@ -61,9 +61,9 @@ Dự án này chỉ đẩy lên GitHub các mã nguồn tùy chỉnh (Custom Cod
 4. Thêm sản phẩm mẫu qua WooCommerce và thiết lập thông số kỹ thuật trong box "PC Builder Specs".
 5. Vào menu **PC Builder** ở sidebar Admin để cấu hình "Component Types" (CPU, Main, RAM...) và "Compatibility Rules" (Quy tắc tương thích).
 
-## 🎓 Về tác giả
+## 🎓 Về nhóm tác giả
 
 Dự án được thiết kế và lập trình bởi:
 - **Lâm Chí Thành**
 - **Đặng Hoàng Tùng**
-- Đề tài: Thương mại điện tử / Hệ thống thông tin (Xây dựng Website PC Store).
+- Đề tài: Thương mại điện tử / Hệ thống thông tin (Xây dựng Website PC Store - TTShopGear).
