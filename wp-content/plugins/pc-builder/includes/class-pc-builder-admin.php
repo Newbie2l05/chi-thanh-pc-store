@@ -231,17 +231,23 @@ class PC_Builder_Admin {
 		$rows            = $this->get_compatibility_rule_rows();
 		$component_types = $this->get_component_types_options();
 		$operators       = array(
-			'eq'       => '=',
-			'neq'      => '!=',
-			'gte'      => '>=',
-			'lte'      => '<=',
-			'contains' => 'chứa',
+			'eq'       => '= (Bằng nhau)',
+			'neq'      => '!= (Khác nhau)',
+			'gte'      => '>= (Lớn hơn hoặc bằng)',
+			'lte'      => '<= (Nhỏ hơn hoặc bằng)',
+			'contains' => 'Chứa (vd: DDR5)',
 		);
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('Luật tương thích', 'pc-builder'); ?></h1>
-			<p><?php echo esc_html__('Tạo các luật kiểm tra giữa hai loại linh kiện.', 'pc-builder'); ?></p>
-
+			<h1><?php echo esc_html__('Luật tương thích (Logic dựng PC)', 'pc-builder'); ?></h1>
+			<div class="notice notice-info" style="padding:15px; margin-top:15px; border-left-color: #2271b1;">
+				<p style="margin:0 0 10px; font-size:14px;"><strong>💡 Giải thích cách hoạt động (Dành cho báo cáo):</strong></p>
+				<p style="margin:0 0 5px;">Hệ thống dùng tính năng này để ngăn khách hàng chọn sai linh kiện. Thay vì code cứng (hardcode), plugin cho phép Admin tự định nghĩa luật trong database.</p>
+				<ul style="list-style:disc; padding-left:20px; margin:0;">
+					<li><strong>Ví dụ 1 (Socket CPU):</strong> CPU và Mainboard phải khớp nhau. Cài đặt: Nguồn = <code>CPU</code>, Đích = <code>Mainboard</code>, Khóa thông số = <code>socket</code>, Toán tử = <code>= (Bằng nhau)</code>.</li>
+					<li><strong>Ví dụ 2 (Kích thước Card):</strong> VGA phải lắp vừa Case. Cài đặt: Nguồn = <code>VGA</code> (khóa: <code>vga_length</code>), Đích = <code>Case</code> (khóa: <code>max_vga_length</code>), Toán tử = <code><= (Nhỏ hơn hoặc bằng)</code>.</li>
+				</ul>
+			</div>
 			<form method="post" style="max-width: 860px; margin: 20px 0;">
 				<?php wp_nonce_field('pc_builder_save_compatibility_rule'); ?>
 				<input type="hidden" name="pc_builder_action" value="save_compatibility_rule">
@@ -259,11 +265,17 @@ class PC_Builder_Admin {
 						</tr>
 						<tr>
 							<th scope="row"><label for="pc-builder-rule-source-key"><?php echo esc_html__('Khóa thông số nguồn', 'pc-builder'); ?></label></th>
-							<td><input name="source_spec_key" type="text" id="pc-builder-rule-source-key" value="<?php echo esc_attr($current_item['source_spec_key'] ?? ''); ?>" class="regular-text" required></td>
+							<td>
+								<input name="source_spec_key" type="text" id="pc-builder-rule-source-key" value="<?php echo esc_attr($current_item['source_spec_key'] ?? ''); ?>" class="regular-text" placeholder="Ví dụ: socket" required>
+								<p class="description">Thuộc tính của linh kiện thứ nhất (vd: socket của CPU).</p>
+							</td>
 						</tr>
 						<tr>
 							<th scope="row"><label for="pc-builder-rule-target-key"><?php echo esc_html__('Khóa thông số đích', 'pc-builder'); ?></label></th>
-							<td><input name="target_spec_key" type="text" id="pc-builder-rule-target-key" value="<?php echo esc_attr($current_item['target_spec_key'] ?? ''); ?>" class="regular-text" required></td>
+							<td>
+								<input name="target_spec_key" type="text" id="pc-builder-rule-target-key" value="<?php echo esc_attr($current_item['target_spec_key'] ?? ''); ?>" class="regular-text" placeholder="Ví dụ: socket" required>
+								<p class="description">Thuộc tính của linh kiện thứ hai (vd: socket của Mainboard).</p>
+							</td>
 						</tr>
 						<tr>
 							<th scope="row"><label for="pc-builder-rule-operator"><?php echo esc_html__('Toán tử', 'pc-builder'); ?></label></th>
@@ -277,7 +289,10 @@ class PC_Builder_Admin {
 						</tr>
 						<tr>
 							<th scope="row"><label for="pc-builder-rule-message"><?php echo esc_html__('Thông báo lỗi', 'pc-builder'); ?></label></th>
-							<td><input name="error_message" type="text" id="pc-builder-rule-message" value="<?php echo esc_attr($current_item['error_message'] ?? ''); ?>" class="regular-text" required></td>
+							<td>
+								<input name="error_message" type="text" id="pc-builder-rule-message" value="<?php echo esc_attr($current_item['error_message'] ?? ''); ?>" class="regular-text" placeholder="Ví dụ: Socket của CPU và Mainboard không khớp!" required>
+								<p class="description">Dòng chữ sẽ hiện lên cảnh báo khách hàng khi họ chọn sai.</p>
+							</td>
 						</tr>
 						<tr>
 							<th scope="row"><label for="pc-builder-rule-priority"><?php echo esc_html__('Độ ưu tiên', 'pc-builder'); ?></label></th>
