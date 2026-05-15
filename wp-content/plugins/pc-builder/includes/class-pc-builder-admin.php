@@ -43,14 +43,7 @@ class PC_Builder_Admin {
 			array($this, 'render_product_specs_page')
 		);
 
-		add_submenu_page(
-			'pc-builder',
-			'Luật tương thích',
-			'Luật tương thích',
-			'manage_options',
-			'pc-builder-compatibility-rules',
-			array($this, 'render_compatibility_rules_page')
-		);
+
 	}
 
 	public function maybe_show_woocommerce_notice() {
@@ -81,8 +74,7 @@ class PC_Builder_Admin {
 		$messages = array(
 			'component_saved' => array('type' => 'success', 'text' => __('Đã lưu loại linh kiện.', 'pc-builder')),
 			'component_deleted' => array('type' => 'success', 'text' => __('Đã xóa loại linh kiện.', 'pc-builder')),
-			'rule_saved' => array('type' => 'success', 'text' => __('Đã lưu luật tương thích.', 'pc-builder')),
-			'rule_deleted' => array('type' => 'success', 'text' => __('Đã xóa luật tương thích.', 'pc-builder')),
+
 			'specs_saved' => array('type' => 'success', 'text' => __('Đã lưu thông số sản phẩm.', 'pc-builder')),
 		);
 
@@ -104,7 +96,7 @@ class PC_Builder_Admin {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__('Bảng điều khiển PC Builder', 'pc-builder'); ?></h1>
-			<p><?php echo esc_html__('Plugin tùy biến dựng cấu hình PC, kiểm tra tương thích linh kiện và tích hợp giỏ hàng WooCommerce.', 'pc-builder'); ?></p>
+			<p><?php echo esc_html__('Plugin tùy biến dựng cấu hình PC và tích hợp giỏ hàng WooCommerce.', 'pc-builder'); ?></p>
 
 			<table class="widefat striped" style="max-width: 720px;">
 				<tbody>
@@ -129,7 +121,7 @@ class PC_Builder_Admin {
 
 			<h2><?php echo esc_html__('Các bước phát triển tiếp theo', 'pc-builder'); ?></h2>
 			<ol>
-				<li><?php echo esc_html__('Thêm giao diện CRUD cho loại linh kiện, thông số và luật tương thích.', 'pc-builder'); ?></li>
+				<li><?php echo esc_html__('Thêm giao diện CRUD cho loại linh kiện và thông số.', 'pc-builder'); ?></li>
 				<li><?php echo esc_html__('Thêm hộp meta thông số kỹ thuật ở từng sản phẩm.', 'pc-builder'); ?></li>
 				<li><?php echo esc_html__('Xây dựng trang PC Builder phía frontend và luồng kiểm tra.', 'pc-builder'); ?></li>
 				<li><?php echo esc_html__('Tích hợp cấu hình đã chọn vào giỏ hàng WooCommerce.', 'pc-builder'); ?></li>
@@ -226,104 +218,13 @@ class PC_Builder_Admin {
 		<?php
 	}
 
-	public function render_compatibility_rules_page() {
-		$current_item    = $this->get_compatibility_rule_for_edit();
-		$rows            = $this->get_compatibility_rule_rows();
-		$component_types = $this->get_component_types_options();
-		$operators       = array(
-			'eq'       => '= (Bằng nhau)',
-			'neq'      => '!= (Khác nhau)',
-			'gte'      => '>= (Lớn hơn hoặc bằng)',
-			'lte'      => '<= (Nhỏ hơn hoặc bằng)',
-			'contains' => 'Chứa (vd: DDR5)',
-		);
-		?>
-		<div class="wrap">
-			<h1><?php echo esc_html__('Luật tương thích (Logic dựng PC)', 'pc-builder'); ?></h1>
-			<div class="notice notice-info" style="padding:15px; margin-top:15px; border-left-color: #2271b1;">
-				<p style="margin:0 0 10px; font-size:14px;"><strong>💡 Giải thích cách hoạt động (Dành cho báo cáo):</strong></p>
-				<p style="margin:0 0 5px;">Hệ thống dùng tính năng này để ngăn khách hàng chọn sai linh kiện. Thay vì code cứng (hardcode), plugin cho phép Admin tự định nghĩa luật trong database.</p>
-				<ul style="list-style:disc; padding-left:20px; margin:0;">
-					<li><strong>Ví dụ 1 (Socket CPU):</strong> CPU và Mainboard phải khớp nhau. Cài đặt: Nguồn = <code>CPU</code>, Đích = <code>Mainboard</code>, Khóa thông số = <code>socket</code>, Toán tử = <code>= (Bằng nhau)</code>.</li>
-					<li><strong>Ví dụ 2 (Kích thước Card):</strong> VGA phải lắp vừa Case. Cài đặt: Nguồn = <code>VGA</code> (khóa: <code>vga_length</code>), Đích = <code>Case</code> (khóa: <code>max_vga_length</code>), Toán tử = <code><= (Nhỏ hơn hoặc bằng)</code>.</li>
-				</ul>
-			</div>
-			<form method="post" style="max-width: 860px; margin: 20px 0;">
-				<?php wp_nonce_field('pc_builder_save_compatibility_rule'); ?>
-				<input type="hidden" name="pc_builder_action" value="save_compatibility_rule">
-				<input type="hidden" name="id" value="<?php echo esc_attr((string) ($current_item['id'] ?? 0)); ?>">
-
-				<table class="form-table" role="presentation">
-					<tbody>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-source"><?php echo esc_html__('Linh kiện nguồn', 'pc-builder'); ?></label></th>
-							<td><?php $this->render_component_type_select('source_component_type_id', $component_types, $current_item['source_component_type_id'] ?? 0, 'pc-builder-rule-source'); ?></td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-target"><?php echo esc_html__('Linh kiện đích', 'pc-builder'); ?></label></th>
-							<td><?php $this->render_component_type_select('target_component_type_id', $component_types, $current_item['target_component_type_id'] ?? 0, 'pc-builder-rule-target'); ?></td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-source-key"><?php echo esc_html__('Khóa thông số nguồn', 'pc-builder'); ?></label></th>
-							<td>
-								<input name="source_spec_key" type="text" id="pc-builder-rule-source-key" value="<?php echo esc_attr($current_item['source_spec_key'] ?? ''); ?>" class="regular-text" placeholder="Ví dụ: socket" required>
-								<p class="description">Thuộc tính của linh kiện thứ nhất (vd: socket của CPU).</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-target-key"><?php echo esc_html__('Khóa thông số đích', 'pc-builder'); ?></label></th>
-							<td>
-								<input name="target_spec_key" type="text" id="pc-builder-rule-target-key" value="<?php echo esc_attr($current_item['target_spec_key'] ?? ''); ?>" class="regular-text" placeholder="Ví dụ: socket" required>
-								<p class="description">Thuộc tính của linh kiện thứ hai (vd: socket của Mainboard).</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-operator"><?php echo esc_html__('Toán tử', 'pc-builder'); ?></label></th>
-							<td>
-								<select name="operator" id="pc-builder-rule-operator">
-									<?php foreach ($operators as $key => $label) : ?>
-										<option value="<?php echo esc_attr($key); ?>" <?php selected($current_item['operator'] ?? 'eq', $key); ?>><?php echo esc_html($label); ?></option>
-									<?php endforeach; ?>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-message"><?php echo esc_html__('Thông báo lỗi', 'pc-builder'); ?></label></th>
-							<td>
-								<input name="error_message" type="text" id="pc-builder-rule-message" value="<?php echo esc_attr($current_item['error_message'] ?? ''); ?>" class="regular-text" placeholder="Ví dụ: Socket của CPU và Mainboard không khớp!" required>
-								<p class="description">Dòng chữ sẽ hiện lên cảnh báo khách hàng khi họ chọn sai.</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><label for="pc-builder-rule-priority"><?php echo esc_html__('Độ ưu tiên', 'pc-builder'); ?></label></th>
-							<td><input name="priority" type="number" id="pc-builder-rule-priority" value="<?php echo esc_attr((string) ($current_item['priority'] ?? 100)); ?>" class="small-text"></td>
-						</tr>
-						<tr>
-							<th scope="row"><?php echo esc_html__('Kích hoạt', 'pc-builder'); ?></th>
-							<td>
-								<label>
-									<input name="is_active" type="checkbox" value="1" <?php checked(! isset($current_item['is_active']) || ! empty($current_item['is_active']), true); ?>>
-									<?php echo esc_html__('Bật luật này.', 'pc-builder'); ?>
-								</label>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-
-				<?php submit_button(isset($current_item['id']) ? __('Cập nhật luật', 'pc-builder') : __('Thêm luật', 'pc-builder')); ?>
-			</form>
-
-			<?php $this->render_compatibility_rules_table($rows); ?>
-		</div>
-		<?php
-	}
 
 	private function get_dashboard_stats() {
 		global $wpdb;
 
 		return array(
 			'component_types' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_component_types"),
-			'rules'           => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_compatibility_rules"),
+
 			'builds'          => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_builds"),
 			'specs'           => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_product_specs"),
 		);
@@ -358,12 +259,7 @@ class PC_Builder_Admin {
 			case 'delete_component_type':
 				$this->delete_component_type();
 				break;
-			case 'save_compatibility_rule':
-				$this->save_compatibility_rule();
-				break;
-			case 'delete_compatibility_rule':
-				$this->delete_compatibility_rule();
-				break;
+
 		}
 	}
 
@@ -565,48 +461,7 @@ class PC_Builder_Admin {
 		$this->redirect_with_notice('admin.php?page=pc-builder-component-types', 'component_deleted');
 	}
 
-	private function save_compatibility_rule() {
-		check_admin_referer('pc_builder_save_compatibility_rule');
 
-		global $wpdb;
-
-		$table_name = $wpdb->prefix . 'pc_compatibility_rules';
-		$id         = isset($_POST['id']) ? absint(wp_unslash($_POST['id'])) : 0;
-		$data       = array(
-			'source_component_type_id' => isset($_POST['source_component_type_id']) ? absint(wp_unslash($_POST['source_component_type_id'])) : 0,
-			'target_component_type_id' => isset($_POST['target_component_type_id']) ? absint(wp_unslash($_POST['target_component_type_id'])) : 0,
-			'source_spec_key'          => sanitize_key(wp_unslash($_POST['source_spec_key'] ?? '')),
-			'target_spec_key'          => sanitize_key(wp_unslash($_POST['target_spec_key'] ?? '')),
-			'operator'                 => sanitize_key(wp_unslash($_POST['operator'] ?? 'eq')),
-			'error_message'            => sanitize_text_field(wp_unslash($_POST['error_message'] ?? '')),
-			'priority'                 => isset($_POST['priority']) ? intval(wp_unslash($_POST['priority'])) : 100,
-			'is_active'                => isset($_POST['is_active']) ? 1 : 0,
-		);
-
-		if ($id > 0) {
-			$wpdb->update($table_name, $data, array('id' => $id), array('%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d'), array('%d'));
-		} else {
-			$wpdb->insert($table_name, $data, array('%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d'));
-		}
-
-		$this->redirect_with_notice('admin.php?page=pc-builder-compatibility-rules', 'rule_saved');
-	}
-
-	private function delete_compatibility_rule() {
-		$id = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
-
-		check_admin_referer('pc_builder_delete_compatibility_rule_' . $id);
-
-		if ($id <= 0) {
-			return;
-		}
-
-		global $wpdb;
-
-		$wpdb->delete($wpdb->prefix . 'pc_compatibility_rules', array('id' => $id), array('%d'));
-
-		$this->redirect_with_notice('admin.php?page=pc-builder-compatibility-rules', 'rule_deleted');
-	}
 
 	private function render_component_types_table($rows) {
 		?>
@@ -645,46 +500,7 @@ class PC_Builder_Admin {
 		<?php
 	}
 
-	private function render_compatibility_rules_table($rows) {
-		?>
-		<table class="widefat striped">
-			<thead>
-				<tr>
-					<th><?php echo esc_html__('Nguồn', 'pc-builder'); ?></th>
-					<th><?php echo esc_html__('Đích', 'pc-builder'); ?></th>
-					<th><?php echo esc_html__('So khớp thông số', 'pc-builder'); ?></th>
-					<th><?php echo esc_html__('Toán tử', 'pc-builder'); ?></th>
-					<th><?php echo esc_html__('Độ ưu tiên', 'pc-builder'); ?></th>
-					<th><?php echo esc_html__('Kích hoạt', 'pc-builder'); ?></th>
-					<th><?php echo esc_html__('Thao tác', 'pc-builder'); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php if (empty($rows)) : ?>
-					<tr>
-						<td colspan="7"><?php echo esc_html__('No compatibility rules found.', 'pc-builder'); ?></td>
-					</tr>
-				<?php else : ?>
-					<?php foreach ($rows as $row) : ?>
-						<tr>
-							<td><?php echo esc_html($row['source_component_name']); ?></td>
-							<td><?php echo esc_html($row['target_component_name']); ?></td>
-							<td><?php echo esc_html($row['source_spec_key'] . ' -> ' . $row['target_spec_key']); ?></td>
-							<td><?php echo esc_html($row['operator']); ?></td>
-							<td><?php echo esc_html((string) $row['priority']); ?></td>
-							<td><?php echo esc_html(! empty($row['is_active']) ? __('Có', 'pc-builder') : __('Không', 'pc-builder')); ?></td>
-							<td>
-								<a href="<?php echo esc_url(admin_url('admin.php?page=pc-builder-compatibility-rules&action=edit&id=' . (int) $row['id'])); ?>"><?php echo esc_html__('Sửa', 'pc-builder'); ?></a>
-								|
-								<a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=pc-builder-compatibility-rules&pc_builder_action=delete_compatibility_rule&id=' . (int) $row['id']), 'pc_builder_delete_compatibility_rule_' . (int) $row['id'])); ?>" onclick="return confirm('<?php echo esc_js(__('Xóa luật tương thích này?', 'pc-builder')); ?>');"><?php echo esc_html__('Xóa', 'pc-builder'); ?></a>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-				<?php endif; ?>
-			</tbody>
-		</table>
-		<?php
-	}
+
 
 	private function get_component_types_options() {
 		global $wpdb;
@@ -728,43 +544,7 @@ class PC_Builder_Admin {
 		return is_array($row) ? $row : array();
 	}
 
-	private function get_compatibility_rule_for_edit() {
-		global $wpdb;
 
-		$action = isset($_GET['action']) ? sanitize_key(wp_unslash($_GET['action'])) : '';
-		$id     = isset($_GET['id']) ? absint(wp_unslash($_GET['id'])) : 0;
-
-		if ('edit' !== $action || $id <= 0) {
-			return array();
-		}
-
-		$row = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}pc_compatibility_rules WHERE id = %d",
-				$id
-			),
-			ARRAY_A
-		);
-
-		return is_array($row) ? $row : array();
-	}
-
-	private function get_compatibility_rule_rows() {
-		global $wpdb;
-
-		$rows = $wpdb->get_results(
-			"SELECT rules.*,
-				source.name AS source_component_name,
-				target.name AS target_component_name
-			FROM {$wpdb->prefix}pc_compatibility_rules rules
-			LEFT JOIN {$wpdb->prefix}pc_component_types source ON source.id = rules.source_component_type_id
-			LEFT JOIN {$wpdb->prefix}pc_component_types target ON target.id = rules.target_component_type_id
-			ORDER BY rules.priority ASC, rules.id DESC",
-			ARRAY_A
-		);
-
-		return is_array($rows) ? $rows : array();
-	}
 
 	private function get_product_specs($product_id) {
 		global $wpdb;
