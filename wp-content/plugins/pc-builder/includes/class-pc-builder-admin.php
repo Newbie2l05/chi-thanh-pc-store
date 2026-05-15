@@ -94,10 +94,9 @@ class PC_Builder_Admin {
 	public function render_dashboard_page() {
 		$stats = $this->get_dashboard_stats();
 		
-		// Tạo các con số thống kê ngẫu nhiên nhưng thực tế cho báo cáo
-		$visitors_today = rand(350, 800);
-		$total_revenue  = rand(250, 800) * 1000000;
-		$pc_sold        = rand(15, 60);
+		$total_customers = $stats['customers'];
+		$total_revenue   = $stats['total_revenue'];
+		$total_orders    = $stats['pc_sold'];
 		?>
 		<div class="wrap">
 			<h1 style="margin-bottom: 5px;"><?php echo esc_html__('Bảng điều khiển Tổng Quan TTShopGear', 'pc-builder'); ?></h1>
@@ -106,26 +105,26 @@ class PC_Builder_Admin {
 			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-top: 20px;">
 				<!-- Card 1 -->
 				<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #0073aa;">
-					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Khách truy cập hôm nay</h3>
-					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo number_format($visitors_today); ?> <span style="font-size: 14px; color: #46b450; font-weight: 600;">↑ +14.5%</span></div>
+					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Tổng khách hàng</h3>
+					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo number_format($total_customers); ?> <span style="font-size: 14px; color: #46b450; font-weight: 600;"></span></div>
 				</div>
 
 				<!-- Card 2 -->
 				<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #46b450;">
-					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Doanh thu PC (Tháng này)</h3>
+					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Doanh thu bán hàng</h3>
 					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo number_format($total_revenue, 0, ',', '.'); ?>đ</div>
 				</div>
 
 				<!-- Card 3 -->
 				<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ffba00;">
-					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Bộ PC đã bán (Tháng này)</h3>
-					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo $pc_sold; ?> bộ</div>
+					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Đơn hàng thành công</h3>
+					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo $total_orders; ?> đơn</div>
 				</div>
 
 				<!-- Card 4 -->
 				<div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #d63638;">
-					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Khách đã lưu cấu hình chờ duyệt</h3>
-					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo esc_html($stats['builds'] + rand(5, 15)); ?> đơn</div>
+					<h3 style="margin: 0 0 10px; color: #555; font-size: 14px; font-weight: 600;">Cấu hình PC đã lưu</h3>
+					<div style="font-size: 32px; font-weight: 800; color: #111;"><?php echo esc_html($stats['builds']); ?> cấu hình</div>
 				</div>
 			</div>
 
@@ -244,11 +243,27 @@ class PC_Builder_Admin {
 	private function get_dashboard_stats() {
 		global $wpdb;
 
+		$total_revenue = 0;
+		$pc_sold = 0;
+		$customers = 0;
+
+		// WooCommerce order and customer stats
+		if ( class_exists( 'WooCommerce' ) ) {
+			$order_stats = $wpdb->get_row( "SELECT COUNT(order_id) as total_orders, SUM(total_sales) as total_revenue FROM {$wpdb->prefix}wc_order_stats WHERE status IN ('wc-completed', 'wc-processing')" );
+			if ($order_stats) {
+				$total_revenue = (float) $order_stats->total_revenue;
+				$pc_sold = (int) $order_stats->total_orders;
+			}
+			$customers = (int) $wpdb->get_var( "SELECT COUNT(customer_id) FROM {$wpdb->prefix}wc_customer_lookup" );
+		}
+
 		return array(
 			'component_types' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_component_types"),
-
 			'builds'          => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_builds"),
 			'specs'           => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}pc_product_specs"),
+			'total_revenue'   => $total_revenue,
+			'pc_sold'         => $pc_sold,
+			'customers'       => $customers,
 		);
 	}
 
