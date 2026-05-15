@@ -1,0 +1,61 @@
+# WordPress core files (managed by WP, not custom code)
+/wp-admin/
+/wp-includes/
+/wp-content/uploads/
+/wp-content/upgrade/
+/wp-content/cache/
+/wp-content/languages/
+
+# WordPress default themes (not our custom theme)
+/wp-content/themes/twentytwenty*/
+
+# WooCommerce plugin (installed via WP admin)
+/wp-content/plugins/woocommerce/
+
+# WordPress config (contains DB credentials)
+wp-config.php
+
+# WordPress core files
+index.php
+wp-activate.php
+wp-blog-header.php
+wp-comments-post.php
+wp-config-sample.php
+wp-cron.php
+wp-links-opml.php
+wp-load.php
+wp-login.php
+wp-mail.php
+wp-settings.php
+wp-signup.php
+wp-trackback.php
+xmlrpc.php
+license.txt
+readme.html
+.htaccess
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node / Build
+node_modules/
+.env
+.env.local
+
+# Logs
+*.log
+error_log
+debug.log
+
+# Misc
+PaxHeaders/
+scripts/
