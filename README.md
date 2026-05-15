@@ -3,7 +3,7 @@
 ![Project Status](https://img.shields.io/badge/Status-Completed-success)
 ![WordPress](https://img.shields.io/badge/WordPress-6.x-blue)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-8.x-purple)
-![PHP](https://php.watch/versions/7.4/releases/7.4.0)
+![PHP](https://img.shields.io/badge/PHP-7.4+-777bb3)
 
 **TTShopGear** là một website Thương mại điện tử chuyên bán linh kiện máy tính và Gaming Gear, được xây dựng trên nền tảng WordPress & WooCommerce. Đây là dự án phục vụ cho Báo Cáo Chuyên Đề (BCCĐ).
 
