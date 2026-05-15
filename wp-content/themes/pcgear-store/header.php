@@ -66,7 +66,7 @@ if ('' === $brand_text) {
 		<a class="site-brand" href="<?php echo esc_url(home_url('/')); ?>">
 			<span class="site-brand__mark">
 				<?php if ($logo_image) : ?>
-					<img src="<?php echo esc_url($logo_image); ?>" alt="<?php echo esc_attr($brand_title); ?>">
+					<img src="<?php echo esc_url($logo_image); ?>" alt="<?php echo esc_attr($brand_title); ?>" loading="lazy" width="40" height="40">
 				<?php else : ?>
 					<?php echo esc_html($logo_mark); ?>
 				<?php endif; ?>

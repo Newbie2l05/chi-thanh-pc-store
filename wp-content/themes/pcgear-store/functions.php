@@ -4,6 +4,70 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
+/* ============================================================
+ * PCGEAR PERFORMANCE — tối ưu cho shared hosting / InfinityFree
+ * ============================================================ */
+
+// 1. Tắt Emoji (tiết kiệm 1 HTTP request + inline JS)
+remove_action('wp_head', 'print_emoji_detection_script', 7);
+remove_action('wp_print_styles', 'print_emoji_styles');
+remove_action('admin_print_scripts', 'print_emoji_detection_script');
+remove_action('admin_print_styles', 'print_emoji_styles');
+remove_filter('the_content_feed', 'wp_staticize_emoji');
+remove_filter('comment_text_rss', 'wp_staticize_emoji');
+remove_filter('wp_mail', 'wp_staticize_emoji_for_email');
+add_filter('emoji_svg_url', '__return_false');
+
+// 2. Tắt XML-RPC (bảo mật + giảm tải)
+add_filter('xmlrpc_enabled', '__return_false');
+
+// 3. Tắt link feed thừa trong <head>
+remove_action('wp_head', 'feed_links', 2);
+remove_action('wp_head', 'feed_links_extra', 3);
+
+// 4. Tắt REST API link trong <head> (không ảnh hưởng WooCommerce)
+remove_action('wp_head', 'rest_output_link_wp_head');
+
+// 5. Tắt wlwmanifest (Windows Live Writer — không dùng)
+remove_action('wp_head', 'wlwmanifest_link');
+
+// 6. Tắt RSD link
+remove_action('wp_head', 'rsd_link');
+
+// 7. Tắt WP Generator meta tag (ẩn phiên bản WP)
+remove_action('wp_head', 'wp_generator');
+
+// 8. Tắt WooCommerce widget status & marketplace suggestion (admin)
+add_filter('woocommerce_marketplace_suggestions_is_visible', '__return_false');
+add_filter('woocommerce_allow_marketplace_suggestions', '__return_false');
+
+// 9. Tắt WooCommerce load styles trên trang không cần thiết
+add_filter('woocommerce_enqueue_styles', 'pcgear_store_selective_woo_styles');
+function pcgear_store_selective_woo_styles($styles) {
+	// Bỏ style không cần thiết để giảm CSS load
+	unset($styles['woocommerce-smallscreen']);
+	return $styles;
+}
+
+// 10. Defer non-critical scripts
+add_filter('script_loader_tag', 'pcgear_store_defer_scripts', 10, 2);
+function pcgear_store_defer_scripts($tag, $handle) {
+	$defer_handles = array('pcgear-store-navigation');
+	if (in_array($handle, $defer_handles, true)) {
+		return str_replace(' src=', ' defer src=', $tag);
+	}
+	return $tag;
+}
+
+// 11. Xóa transient cache nav khi term thay đổi
+add_action('edited_term', 'pcgear_store_clear_nav_cache');
+add_action('created_term', 'pcgear_store_clear_nav_cache');
+add_action('delete_term', 'pcgear_store_clear_nav_cache');
+function pcgear_store_clear_nav_cache() {
+	delete_transient('pcgear_nav_categories');
+	delete_transient('pcgear_navigation_data');
+}
+
 function pcgear_store_setup() {
 	add_theme_support('title-tag');
 	add_theme_support('post-thumbnails');
@@ -282,27 +346,32 @@ function pcgear_store_public_navigation() {
 	$builder_url   = pcgear_store_page_url('build-pc', home_url('/build-pc/'));
 	$guides_url    = pcgear_store_page_url('flow-demo-bccd', $builder_url);
 	$software_url  = pcgear_store_page_url('giai-thich-pc-builder', $builder_url);
-	$categories    = get_terms(
-		array(
-			'taxonomy'   => 'product_cat',
-			'hide_empty' => true,
-			'number'     => 8,
-		)
-	);
-	$product_links = array();
+	// Cache danh mục 1 giờ — giảm query DB mỗi request
+	$product_links = get_transient('pcgear_nav_categories');
+	if (false === $product_links) {
+		$product_links = array();
+		$categories    = get_terms(
+			array(
+				'taxonomy'   => 'product_cat',
+				'hide_empty' => true,
+				'number'     => 8,
+			)
+		);
 
-	if (! is_wp_error($categories) && ! empty($categories)) {
-		foreach ($categories as $category) {
-			$link = get_term_link($category);
-			if (is_wp_error($link)) {
-				continue;
+		if (! is_wp_error($categories) && ! empty($categories)) {
+			foreach ($categories as $category) {
+				$link = get_term_link($category);
+				if (is_wp_error($link)) {
+					continue;
+				}
+
+				$product_links[] = array(
+					'label' => $category->name,
+					'url'   => $link,
+				);
 			}
-
-			$product_links[] = array(
-				'label' => $category->name,
-				'url'   => $link,
-			);
 		}
+		set_transient('pcgear_nav_categories', $product_links, HOUR_IN_SECONDS);
 	}
 
 	return array(
@@ -393,18 +462,26 @@ function pcgear_store_public_navigation() {
 function pcgear_store_get_product_specs($product_id) {
 	global $wpdb;
 
-	$rows = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT spec_key, spec_value, spec_value_numeric, unit
-			FROM {$wpdb->prefix}pc_product_specs
-			WHERE product_id = %d
-			ORDER BY spec_key ASC",
-			$product_id
-		),
-		ARRAY_A
-	);
+	// Cache specs theo product_id — tránh query lặp lại khi load trang sản phẩm
+	$cache_key = 'pcgear_specs_' . (int) $product_id;
+	$rows      = wp_cache_get($cache_key, 'pcgear_store');
 
-	return is_array($rows) ? $rows : array();
+	if (false === $rows) {
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT spec_key, spec_value, spec_value_numeric, unit
+				FROM {$wpdb->prefix}pc_product_specs
+				WHERE product_id = %d
+				ORDER BY spec_key ASC",
+				$product_id
+			),
+			ARRAY_A
+		);
+		$rows = is_array($rows) ? $rows : array();
+		wp_cache_set($cache_key, $rows, 'pcgear_store', 5 * MINUTE_IN_SECONDS);
+	}
+
+	return $rows;
 }
 
 function pcgear_store_format_spec_label($spec_key) {
